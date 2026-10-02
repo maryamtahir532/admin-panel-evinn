@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Menu,
@@ -12,7 +14,6 @@ import {
   Bike,
   Wrench,
   Archive,
-  Zap,
   BookOpen,
   FileText,
   ClipboardList,
@@ -27,7 +28,6 @@ import {
   ArrowUpRight,
   Eye,
   Grid2X2,
-  Plus,
   X,
 } from "lucide-react";
 
@@ -103,6 +103,8 @@ const inquiries = [
 ];
 
 export default function Dashboard() {
+  const router = useRouter();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(true);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -124,20 +126,41 @@ export default function Dashboard() {
       .includes(search.toLowerCase())
   );
 
+  const goToBrands = () => {
+    router.push("/admin/brands");
+    setSidebarOpen(false);
+  };
+
+  const goToModels = () => {
+    router.push("/admin/models");
+    setSidebarOpen(false);
+  };
+
+  const goToAccessories = () => {
+    router.push("/admin/accessories");
+    setSidebarOpen(false);
+  };
+
+  const goToSpareParts = () => {
+    router.push("/admin/spare-parts");
+    setSidebarOpen(false);
+  };
+
+  const goToProfile = () => {
+    router.push("/admin/profile");
+    setAdminOpen(false);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="dashboard">
-
-
       <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
-
         <div className="logo-area">
           <div className="logo">
             E<span>V</span>INN
           </div>
 
-          <div className="admin-panel-text">
-            Admin Panel
-          </div>
+          <div className="admin-panel-text">Admin Panel</div>
         </div>
 
         <button
@@ -148,97 +171,32 @@ export default function Dashboard() {
         </button>
 
         <div className="sidebar-menu">
-
-
           <button
-            className="menu-item "
+            className="menu-item active"
             onClick={() => showMessage("Dashboard")}
           >
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
           </button>
 
-
-          <div>
-
-            <button
-              className="menu-item"
-              onClick={() => setProductsOpen(!productsOpen)}
-            >
-              <Box size={20} />
-
-              <span>Products</span>
-
-              <ChevronDown
-                size={16}
-                className={productsOpen ? "rotate" : ""}
-              />
-            </button>
-
-            {productsOpen && (
-              <div className="submenu">
-
-                <button
-                  onClick={() => showMessage("All Products")}
-                >
-                  All Products
-                </button>
-
-                <button
-                  onClick={() => showMessage("Add New Product")}
-                >
-                  Add New
-                </button>
-
-                <button
-                  onClick={() => showMessage("Categories")}
-                >
-                  Categories
-                </button>
-
-              </div>
-            )}
-
-          </div>
-
-          <button
-            className="menu-item"
-            onClick={() => showMessage("Brands")}
-          >
+          <button className="menu-item" onClick={goToBrands}>
             <Tag size={20} />
             <span>Brands</span>
           </button>
 
-          <button
-            className="menu-item"
-            onClick={() => showMessage("Models")}
-          >
+          <button className="menu-item" onClick={goToModels}>
             <Bike size={20} />
             <span>Models</span>
           </button>
 
-          <button
-            className="menu-item"
-            onClick={() => showMessage("Spare Parts")}
-          >
+          <button className="menu-item" onClick={goToSpareParts}>
             <Wrench size={20} />
             <span>Spare Parts</span>
           </button>
 
-          <button
-            className="menu-item"
-            onClick={() => showMessage("Accessories")}
-          >
+          <button className="menu-item" onClick={goToAccessories}>
             <Archive size={20} />
             <span>Accessories</span>
-          </button>
-
-          <button
-            className="menu-item"
-            onClick={() => showMessage("Battery & Charging")}
-          >
-            <Zap size={20} />
-            <span>Battery & Charging</span>
           </button>
 
           <button
@@ -247,14 +205,6 @@ export default function Dashboard() {
           >
             <BookOpen size={20} />
             <span>Blog / News</span>
-          </button>
-
-          <button
-            className="menu-item"
-            onClick={() => showMessage("Pages")}
-          >
-            <FileText size={20} />
-            <span>Pages</span>
           </button>
 
           <button
@@ -296,12 +246,9 @@ export default function Dashboard() {
             <Settings size={20} />
             <span>Website Settings</span>
           </button>
-
         </div>
 
-
         <div className="sidebar-bottom">
-
           <button
             className="view-website"
             onClick={() => showMessage("Opening Website")}
@@ -318,31 +265,33 @@ export default function Dashboard() {
             <span>Logout</span>
           </button>
 
-         <div className="sidebar-bike">
-  <img src="/evee1.png" alt="Sidebar Bike" width={120} height={120} />
-</div>
+          <div className="sidebar-bike">
+            <img
+              src="/evee1.png"
+              alt="Sidebar Bike"
+              width={120}
+              height={120}
+            />
+          </div>
 
           <div className="tagline">
             <strong>Drive</strong>
             <span>Greener Tomorrow</span>
           </div>
-
         </div>
-
       </aside>
 
-
       <main className="main-content">
-
-
         <header className="topbar">
-
           <div className="top-left">
-
-          
+            <button
+              className="hamburger"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
 
             <div className="search-box">
-
               <Search size={18} />
 
               <input
@@ -360,16 +309,11 @@ export default function Dashboard() {
                   <X size={15} />
                 </button>
               )}
-
             </div>
-
           </div>
 
           <div className="top-right">
-
-
             <div className="notification-wrapper">
-
               <button
                 className="notification-button"
                 onClick={() =>
@@ -377,225 +321,177 @@ export default function Dashboard() {
                 }
               >
                 <Bell size={22} />
-
-                
               </button>
 
               {notificationOpen && (
                 <div className="dropdown notification-dropdown">
-
                   <h4>Notifications</h4>
 
-
+                  <p>
+                    You have new inquiries and product updates.
+                  </p>
                 </div>
               )}
-
             </div>
 
-
             <div className="admin-wrapper">
-
               <button
                 className="admin-button"
                 onClick={() => setAdminOpen(!adminOpen)}
               >
-
-                <div className="avatar">
-                  A
-                </div>
+                <div className="avatar">A</div>
 
                 <span>Admin</span>
 
                 <ChevronDown size={16} />
-
               </button>
 
               {adminOpen && (
                 <div className="dropdown admin-dropdown">
-
-                  <button
-                    onClick={() =>
-                      showMessage("Profile")
-                    }
-                  >
+                  <button onClick={goToProfile}>
                     Profile
                   </button>
 
                   <button
-                    onClick={() =>
-                      showMessage("Settings")
-                    }
+                    onClick={() => {
+                      setAdminOpen(false);
+                      showMessage("Settings");
+                    }}
                   >
                     Settings
                   </button>
 
                   <button
-                    onClick={() =>
-                      showMessage("Logout")
-                    }
+                    onClick={() => {
+                      setAdminOpen(false);
+                      showMessage("Logout");
+                    }}
                   >
                     Logout
                   </button>
-
                 </div>
               )}
-
             </div>
-
           </div>
-
         </header>
 
-
         <div className="page-content">
-
-
           <div className="page-header">
-
             <div>
-
               <h1>Dashboard</h1>
 
               <p>
-                Welcome to EVINN Admin Panel. Manage your
-                products, brands, models and more.
+                Welcome to EVINN Admin Panel. Manage your products,
+                brands, models and more.
               </p>
-
             </div>
 
             <button
               className="date-button"
-              onClick={() =>
-                showMessage("Date picker")
-              }
+              onClick={() => showMessage("Date picker")}
             >
               <CalendarDays size={18} />
               Mon, 25 Aug 2026
             </button>
-
           </div>
 
-
           <div className="stats-grid">
-
             <div className="stat-card">
-
               <div className="stat-icon green">
                 <Box size={28} />
               </div>
 
               <div className="stat-info">
-
                 <span>Total Products</span>
-
                 <strong>248</strong>
-
               </div>
 
               <div className="growth">
-
                 <span>
                   <ArrowUpRight size={14} />
                   12%
                 </span>
 
                 <small>vs last month</small>
-
               </div>
-
             </div>
 
-            <div className="stat-card">
-
+            <div
+              className="stat-card"
+              onClick={goToBrands}
+              style={{ cursor: "pointer" }}
+            >
               <div className="stat-icon green">
                 <Tag size={28} />
               </div>
 
               <div className="stat-info">
-
                 <span>Brands</span>
-
-                <strong>12</strong>
-
+                <strong>18</strong>
               </div>
 
               <div className="growth">
-
                 <span>
                   <ArrowUpRight size={14} />
                   8%
                 </span>
 
                 <small>vs last month</small>
-
               </div>
-
             </div>
 
-            <div className="stat-card">
-
+            <div
+              className="stat-card"
+              onClick={goToModels}
+              style={{ cursor: "pointer" }}
+            >
               <div className="stat-icon green">
                 <Bike size={28} />
               </div>
 
               <div className="stat-info">
-
                 <span>Models</span>
-
-                <strong>86</strong>
-
+                <strong>69</strong>
               </div>
 
               <div className="growth">
-
                 <span>
                   <ArrowUpRight size={14} />
                   15%
                 </span>
 
                 <small>vs last month</small>
-
               </div>
-
             </div>
 
-            <div className="stat-card">
-
+            <div
+              className="stat-card"
+              onClick={goToSpareParts}
+              style={{ cursor: "pointer" }}
+            >
               <div className="stat-icon green">
                 <Wrench size={28} />
               </div>
 
               <div className="stat-info">
-
                 <span>Spare Parts</span>
-
                 <strong>320</strong>
-
               </div>
 
               <div className="growth">
-
                 <span>
                   <ArrowUpRight size={14} />
                   10%
                 </span>
 
                 <small>vs last month</small>
-
               </div>
-
             </div>
-
           </div>
 
-
           <div className="top-panels">
-
-
             <section className="panel products-panel">
-
               <div className="panel-header">
-
                 <h2>Recent Products</h2>
 
                 <button
@@ -605,17 +501,12 @@ export default function Dashboard() {
                 >
                   View All
                 </button>
-
               </div>
 
               <div className="table-container">
-
                 <table>
-
                   <thead>
-
                     <tr>
-
                       <th>Image</th>
                       <th>Name</th>
                       <th>Type</th>
@@ -623,101 +514,77 @@ export default function Dashboard() {
                       <th>Price</th>
                       <th>Status</th>
                       <th>Action</th>
-
                     </tr>
-
                   </thead>
 
                   <tbody>
+                    {filteredProducts.map((product) => (
+                      <tr key={product.name}>
+                        <td>
+                          <div className="product-image">
+                            <img
+                              src="/evee1.png"
+                              alt="Bike"
+                              width={31}
+                              height={31}
+                            />
+                          </div>
+                        </td>
 
-                    {filteredProducts.map(
-                      (product) => (
-                        <tr key={product.name}>
+                        <td className="product-name">
+                          {product.name}
+                        </td>
 
-                          <td>
-  <div className="product-image">
-    <img src="/evee1.png" alt="Bike" width={31} height={31} />
-  </div>
-</td>
+                        <td>{product.type}</td>
 
-                          <td className="product-name">
-                            {product.name}
-                          </td>
+                        <td>{product.brand}</td>
 
-                          <td>
-                            {product.type}
-                          </td>
+                        <td>{product.price}</td>
 
-                          <td>
-                            {product.brand}
-                          </td>
+                        <td>
+                          <span className="status active">
+                            Active
+                          </span>
+                        </td>
 
-                          <td>
-                            {product.price}
-                          </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              className="edit-btn"
+                              onClick={() =>
+                                showMessage(
+                                  `Edit ${product.name}`
+                                )
+                              }
+                            >
+                              <Pencil size={16} />
+                            </button>
 
-                          <td>
-
-                            <span className="status active">
-                              Active
-                            </span>
-
-                          </td>
-
-                          <td>
-
-                            <div className="action-buttons">
-
-                              <button
-                                className="edit-btn"
-                                onClick={() =>
-                                  showMessage(
-                                    `Edit ${product.name}`
-                                  )
-                                }
-                              >
-                                <Pencil size={16} />
-                              </button>
-
-                              <button
-                                className="delete-btn"
-                                onClick={() =>
-                                  showMessage(
-                                    `${product.name} deleted`
-                                  )
-                                }
-                              >
-                                <Trash2 size={16} />
-                              </button>
-
-                            </div>
-
-                          </td>
-
-                        </tr>
-                      )
-                    )}
-
+                            <button
+                              className="delete-btn"
+                              onClick={() =>
+                                showMessage(
+                                  `${product.name} deleted`
+                                )
+                              }
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
-
                 </table>
-
               </div>
-
             </section>
 
-          
-
             <section className="panel quick-panel">
-
               <div className="panel-header">
-
                 <h2>Quick Actions</h2>
-
               </div>
 
               <div className="quick-grid">
-
                 <button
                   className="quick-card green-bg"
                   onClick={() =>
@@ -730,9 +597,7 @@ export default function Dashboard() {
 
                 <button
                   className="quick-card blue-bg"
-                  onClick={() =>
-                    showMessage("Add Brand")
-                  }
+                  onClick={goToBrands}
                 >
                   <Tag />
                   <span>Add Brand</span>
@@ -740,9 +605,7 @@ export default function Dashboard() {
 
                 <button
                   className="quick-card blue-bg"
-                  onClick={() =>
-                    showMessage("Add Model")
-                  }
+                  onClick={goToModels}
                 >
                   <Bike />
                   <span>Add Model</span>
@@ -750,9 +613,7 @@ export default function Dashboard() {
 
                 <button
                   className="quick-card blue-bg"
-                  onClick={() =>
-                    showMessage("Add Spare Part")
-                  }
+                  onClick={goToSpareParts}
                 >
                   <Wrench />
                   <span>Add Spare Part</span>
@@ -760,9 +621,7 @@ export default function Dashboard() {
 
                 <button
                   className="quick-card blue-bg"
-                  onClick={() =>
-                    showMessage("Add Accessory")
-                  }
+                  onClick={goToAccessories}
                 >
                   <Grid2X2 />
                   <span>Add Accessory</span>
@@ -779,44 +638,22 @@ export default function Dashboard() {
                 </button>
 
                 <button
-                  className="quick-card orange-bg"
-                  onClick={() =>
-                    showMessage("Manage Pages")
-                  }
-                >
-                  <FileText />
-                  <span>Manage Pages</span>
-                </button>
-
-                <button
                   className="quick-card blue-bg"
                   onClick={() =>
                     showMessage("Test Ride Requests")
                   }
                 >
                   <CalendarDays />
-                  <span>
-                    View Test Ride Requests
-                  </span>
+                  <span>View Test Ride Requests</span>
                 </button>
-
               </div>
-
             </section>
-
           </div>
 
-
           <div className="bottom-panels">
-
-
             <section className="panel inquiry-panel">
-
               <div className="panel-header">
-
-                <h2>
-                  Latest Orders / Inquiries
-                </h2>
+                <h2>Latest Orders / Inquiries</h2>
 
                 <button
                   onClick={() =>
@@ -825,205 +662,133 @@ export default function Dashboard() {
                 >
                   View All
                 </button>
-
               </div>
 
               <div className="table-container">
-
                 <table>
-
                   <thead>
-
                     <tr>
-
                       <th>Name</th>
                       <th>Type</th>
                       <th>Message</th>
                       <th>Date</th>
                       <th>Status</th>
-
                     </tr>
-
                   </thead>
 
                   <tbody>
+                    {inquiries.map((item) => (
+                      <tr key={item.name}>
+                        <td className="product-name">
+                          {item.name}
+                        </td>
 
-                    {inquiries.map(
-                      (item) => (
-                        <tr key={item.name}>
+                        <td>{item.type}</td>
 
-                          <td className="product-name">
-                            {item.name}
-                          </td>
+                        <td>{item.message}</td>
 
-                          <td>
-                            {item.type}
-                          </td>
+                        <td>{item.date}</td>
 
-                          <td>
-                            {item.message}
-                          </td>
-
-                          <td>
-                            {item.date}
-                          </td>
-
-                          <td>
-
-                            <span
-                              className={`status ${item.status
-                                .toLowerCase()
-                                .replace(" ", "-")}`}
-                            >
-                              {item.status}
-                            </span>
-
-                          </td>
-
-                        </tr>
-                      )
-                    )}
-
+                        <td>
+                          <span
+                            className={`status ${item.status
+                              .toLowerCase()
+                              .replace(" ", "-")}`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
-
                 </table>
-
               </div>
-
             </section>
 
-
             <section className="panel overview-panel">
-
               <div className="panel-header">
-
                 <h2>Website Overview</h2>
 
                 <button className="range-button">
                   Last 30 Days
                   <ChevronDown size={15} />
                 </button>
-
               </div>
 
               <div className="overview-grid">
-
                 <div className="overview-card green-bg">
-
                   <Users size={28} />
 
                   <div>
-
                     <strong>12,540</strong>
-
-                    <span>
-                      Website Visitors
-                    </span>
-
+                    <span>Website Visitors</span>
                   </div>
 
                   <small>
                     <ArrowUpRight size={13} />
                     18%
                   </small>
-
                 </div>
 
                 <div className="overview-card blue-bg">
-
                   <Eye size={28} />
 
                   <div>
-
                     <strong>3,210</strong>
-
-                    <span>
-                      Product Views
-                    </span>
-
+                    <span>Product Views</span>
                   </div>
 
                   <small>
                     <ArrowUpRight size={13} />
                     12%
                   </small>
-
                 </div>
 
                 <div className="overview-card purple-bg">
-
                   <CalendarDays size={28} />
 
                   <div>
-
                     <strong>420</strong>
-
-                    <span>
-                      Test Ride Requests
-                    </span>
-
+                    <span>Test Ride Requests</span>
                   </div>
 
                   <small>
                     <ArrowUpRight size={13} />
                     25%
                   </small>
-
                 </div>
 
                 <div className="overview-card orange-bg">
-
                   <MessageSquare size={28} />
 
                   <div>
-
                     <strong>180</strong>
-
-                    <span>
-                      Contact Messages
-                    </span>
-
+                    <span>Contact Messages</span>
                   </div>
 
                   <small>
                     <ArrowUpRight size={13} />
                     10%
                   </small>
-
                 </div>
-
               </div>
-
             </section>
-
           </div>
 
-
           <footer className="footer">
-
             <span>
               © 2026 <b>EVINN.</b> All Rights Reserved.
             </span>
 
             <span>
-              Pakistan&apos;s Trusted Electric Mobility
-              Marketplace
+              Pakistan&apos;s Trusted Electric Mobility Marketplace{" "}
               <i></i>
             </span>
-
           </footer>
-
         </div>
 
-
-        {message && (
-          <div className="toast">
-            {message}
-          </div>
-        )}
-
+        {message && <div className="toast">{message}</div>}
       </main>
-
     </div>
   );
 }
