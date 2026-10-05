@@ -13,18 +13,12 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-interface SparePart {
-  id: number;
-  slug: string;
-  name: string;
-  price: number;
-  priceText: string;
-  image: string;
-  description: string;
-  features: string[];
-  inStock: boolean;
-}
+import { request } from "@/lib/api";
+import type {
+  SparePart,
+  SparePartListResponse,
+  SparePartResponse,
+} from "@/types/api";
 
 interface SparePartForm {
   name: string;
@@ -46,117 +40,6 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const initialSpareParts: SparePart[] = [
-  {
-    id: 1,
-    slug: "/charger",
-    name: "Charger",
-    price: 1200,
-    priceText: formatPrice(1200),
-    image: "/spare1.png",
-    description:
-      "High-speed authentic charger designed for optimal battery health and fast charging cycles. Built with overcharge protection.",
-    features: ["Fast charging support", "Overcharge protection", "Durable cable"],
-    inStock: true,
-  },
-  {
-    id: 2,
-    slug: "/tyre",
-    name: "Tyre",
-    price: 2500,
-    priceText: formatPrice(2500),
-    image: "/spare2.png",
-    description:
-      "Premium tubeless tyre offering excellent grip on both wet and dry roads, ensuring a safe and smooth ride.",
-    features: [
-      "Anti-puncture layer",
-      "High grip tread pattern",
-      "Long-lasting rubber compound",
-    ],
-    inStock: true,
-  },
-  {
-    id: 3,
-    slug: "/battery",
-    name: "Battery",
-    price: 40000,
-    priceText: formatPrice(40000),
-    image: "/sparepart.png",
-    description:
-      "Long-lasting lithium-ion battery replacement for extended range. Engineered for high performance and durability.",
-    features: ["High capacity", "Weather sealed", "2-year warranty"],
-    inStock: true,
-  },
-  {
-    id: 4,
-    slug: "/motor",
-    name: "Motor",
-    price: 27000,
-    priceText: formatPrice(27000),
-    image: "/spare4.png",
-    description:
-      "High-torque electric motor for powerful acceleration and hill-climbing ability. Factory original replacement part.",
-    features: ["Brushless hub motor", "Waterproof casing", "Energy efficient"],
-    inStock: false,
-  },
-  {
-    id: 5,
-    slug: "/brake-pads",
-    name: "Brake pads",
-    price: 1500,
-    priceText: formatPrice(1500),
-    image: "/spare5.png",
-    description:
-      "Ceramic composite brake pads for instant stopping power and reduced brake fade during long rides.",
-    features: ["Low noise", "Heat resistant", "Extended lifespan"],
-    inStock: true,
-  },
-  {
-    id: 6,
-    slug: "/controller",
-    name: "Controller",
-    price: 8500,
-    priceText: formatPrice(8500),
-    image: "/spare6.png",
-    description:
-      "Smart motor controller unit for smooth power delivery and improved battery efficiency.",
-    features: [
-      "Overheating protection",
-      "Plug-and-play installation",
-      "Smooth throttle response",
-    ],
-    inStock: true,
-  },
-  {
-    id: 7,
-    slug: "/display",
-    name: "Display",
-    price: 4200,
-    priceText: formatPrice(4200),
-    image: "/spare7.png",
-    description:
-      "Bright LCD dashboard display showing speed, battery life, and odometer readings clearly even in direct sunlight.",
-    features: ["Anti-glare screen", "Water-resistant", "Real-time diagnostics"],
-    inStock: true,
-  },
-  {
-    id: 8,
-    slug: "/headlight",
-    name: "Headlight",
-    price: 3100,
-    priceText: formatPrice(3100),
-    image: "/spare8.png",
-    description:
-      "Ultra-bright LED headlight assembly for maximum nighttime visibility and safety.",
-    features: [
-      "Low power consumption",
-      "Wide beam angle",
-      "Impact-resistant lens",
-    ],
-    inStock: true,
-  },
-];
-
 const emptyForm: SparePartForm = {
   name: "",
   slug: "",
@@ -168,6 +51,9 @@ const emptyForm: SparePartForm = {
 };
 
 const MAX_FEATURES = 8;
+
+const errorText = (err: unknown) =>
+  err instanceof Error ? err.message : "Something went wrong.";
 
 const inputClass = (error?: string) =>
   `w-full rounded-xl border bg-[#081119] px-4 text-sm text-white outline-none transition-all placeholder:text-[#5F6B79] ${
@@ -202,47 +88,20 @@ function SparePartImage({ src, alt }: { src: string; alt: string }) {
 export default function SparePartsPage() {
   const router = useRouter();
 
-  const [spareParts, setSpareParts] =
-    useState<SparePart[]>(initialSpareParts);
-  const [loaded, setLoaded] = useState(false);
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState<
     "all" | "in-stock" | "out-of-stock"
   >("all");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SparePartForm>(emptyForm);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [toast, setToast] = useState("");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("evinn-spare-parts");
-
-      if (saved) {
-        const parsed = JSON.parse(saved);
-
-        if (Array.isArray(parsed)) {
-          setSpareParts(parsed);
-        }
-      }
-    } catch {
-      setSpareParts(initialSpareParts);
-    }
-
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-
-    try {
-      localStorage.setItem("evinn-spare-parts", JSON.stringify(spareParts));
-    } catch {
-      showToast("Storage is full. Try smaller images.");
-    }
-  }, [spareParts, loaded]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -251,6 +110,15 @@ export default function SparePartsPage() {
       setToast("");
     }, 2200);
   };
+
+  useEffect(() => {
+    request<SparePartListResponse>("/spare-parts", {
+      query: { limit: 100 },
+    })
+      .then((data) => setSpareParts(data.spareParts))
+      .catch((err) => showToast(errorText(err)))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredSpareParts = spareParts.filter((item) => {
     const matchesSearch = `${item.name} ${item.slug} ${item.description}`
@@ -271,24 +139,26 @@ export default function SparePartsPage() {
   const openAddModal = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setSelectedFile(null);
     setSlugTouched(false);
     setErrors({});
     setModalOpen(true);
   };
 
   const openEditModal = (item: SparePart) => {
-    setEditingId(item.id);
+    setEditingId(item._id);
 
     setForm({
       name: item.name,
       slug: item.slug,
       price: String(item.price),
-      image: item.image,
+      image: item.imageUrl,
       description: item.description,
       features: item.features.length > 0 ? [...item.features] : [""],
       inStock: item.inStock,
     });
 
+    setSelectedFile(null);
     setSlugTouched(true);
     setErrors({});
     setModalOpen(true);
@@ -298,6 +168,7 @@ export default function SparePartsPage() {
     setModalOpen(false);
     setEditingId(null);
     setForm(emptyForm);
+    setSelectedFile(null);
     setSlugTouched(false);
     setErrors({});
   };
@@ -310,7 +181,7 @@ export default function SparePartsPage() {
       const next = { ...prev, [field]: value };
 
       if (field === "name" && !slugTouched) {
-        next.slug = value.trim() ? `/${slugify(value)}` : "";
+        next.slug = value.trim() ? slugify(value) : "";
       }
 
       return next;
@@ -362,39 +233,36 @@ export default function SparePartsPage() {
       "image/jpg",
       "image/png",
       "image/webp",
+      "image/gif",
+      "image/avif",
     ];
 
     if (!allowedTypes.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
-        image: "Only JPG, PNG and WEBP images are allowed.",
+        image: "Only JPG, PNG, WEBP, GIF and AVIF images are allowed.",
       }));
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       setErrors((prev) => ({
         ...prev,
-        image: "Image size must be less than 2MB.",
+        image: "Image size must be less than 5MB.",
       }));
       return;
     }
 
-    const reader = new FileReader();
+    setSelectedFile(file);
+    setForm((prev) => ({
+      ...prev,
+      image: URL.createObjectURL(file),
+    }));
 
-    reader.onload = () => {
-      setForm((prev) => ({
-        ...prev,
-        image: reader.result as string,
-      }));
-
-      setErrors((prev) => ({
-        ...prev,
-        image: "",
-      }));
-    };
-
-    reader.readAsDataURL(file);
+    setErrors((prev) => ({
+      ...prev,
+      image: "",
+    }));
   };
 
   const validate = () => {
@@ -408,11 +276,12 @@ export default function SparePartsPage() {
 
     if (!slugValue) {
       newErrors.slug = "Slug is required.";
-    } else if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slugValue)) {
-      newErrors.slug = "Slug must start with / and use lowercase letters, numbers and hyphens.";
+    } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slugValue)) {
+      newErrors.slug =
+        "Slug must use lowercase letters, numbers and hyphens.";
     } else if (
       spareParts.some(
-        (item) => item.slug === slugValue && item.id !== editingId
+        (item) => item.slug === slugValue && item._id !== editingId
       )
     ) {
       newErrors.slug = "This slug is already used by another spare part.";
@@ -426,7 +295,7 @@ export default function SparePartsPage() {
       newErrors.description = "Description is required.";
     }
 
-    if (!form.image) {
+    if (editingId === null && !selectedFile) {
       newErrors.image = "Spare Part image is required.";
     }
 
@@ -435,19 +304,15 @@ export default function SparePartsPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    const priceValue = Number(form.price);
-
-    const payload = {
-      slug: form.slug.trim(),
+    const fields = {
       name: form.name.trim(),
-      price: priceValue,
-      priceText: formatPrice(priceValue),
-      image: form.image,
+      slug: form.slug.trim(),
+      price: Number(form.price),
       description: form.description.trim(),
       features: form.features
         .map((feature) => feature.trim())
@@ -455,42 +320,77 @@ export default function SparePartsPage() {
       inStock: form.inStock,
     };
 
-    if (editingId !== null) {
-      setSpareParts((prev) =>
-        prev.map((item) =>
-          item.id === editingId ? { ...item, ...payload } : item
-        )
-      );
+    setSaving(true);
 
-      showToast("Spare Part updated successfully.");
-    } else {
-      const maxId = spareParts.reduce(
-        (max, item) => Math.max(max, item.id),
-        0
-      );
+    try {
+      let body: FormData | typeof fields;
 
-      setSpareParts((prev) => [...prev, { id: maxId + 1, ...payload }]);
+      if (selectedFile) {
+        const fd = new FormData();
 
-      showToast("Spare Part added successfully.");
+        fd.append("image", selectedFile);
+        fd.append("name", fields.name);
+        fd.append("slug", fields.slug);
+        fd.append("price", String(fields.price));
+        fd.append("description", fields.description);
+        fd.append("inStock", String(fields.inStock));
+        fields.features.forEach((feature) => fd.append("features", feature));
+
+        body = fd;
+      } else {
+        body = fields;
+      }
+
+      if (editingId !== null) {
+        const data = await request<SparePartResponse>(
+          `/spare-parts/${editingId}`,
+          { method: "PATCH", body }
+        );
+
+        setSpareParts((prev) =>
+          prev.map((item) =>
+            item._id === data.sparePart._id ? data.sparePart : item
+          )
+        );
+
+        showToast("Spare Part updated successfully.");
+      } else {
+        const data = await request<SparePartResponse>("/spare-parts", {
+          method: "POST",
+          body,
+        });
+
+        setSpareParts((prev) => [data.sparePart, ...prev]);
+
+        showToast("Spare Part added successfully.");
+      }
+
+      closeModal();
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, form: errorText(err) }));
+    } finally {
+      setSaving(false);
     }
-
-    closeModal();
   };
 
-  const handleDelete = (id: number) => {
-    const item = spareParts.find((entry) => entry.id === id);
-
-    if (!item) return;
-
+  const handleDelete = async (item: SparePart) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${item.name}?`
     );
 
     if (!confirmed) return;
 
-    setSpareParts((prev) => prev.filter((entry) => entry.id !== id));
+    try {
+      await request(`/spare-parts/${item._id}`, { method: "DELETE" });
 
-    showToast("Spare Part deleted successfully.");
+      setSpareParts((prev) =>
+        prev.filter((entry) => entry._id !== item._id)
+      );
+
+      showToast("Spare Part deleted successfully.");
+    } catch (err) {
+      showToast(errorText(err));
+    }
   };
 
   return (
@@ -685,14 +585,20 @@ export default function SparePartsPage() {
                 </thead>
 
                 <tbody>
-                  {filteredSpareParts.length > 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-16 text-center text-sm text-[#7F8B9A]">
+                        Loading spare parts...
+                      </td>
+                    </tr>
+                  ) : filteredSpareParts.length > 0 ? (
                     filteredSpareParts.map((item) => (
                       <tr
-                        key={item.id}
+                        key={item._id}
                         className="border-b border-[#17242E] transition-all duration-200 hover:bg-[#111D27]"
                       >
                         <td className="px-6 py-4">
-                          <SparePartImage src={item.image} alt={item.name} />
+                          <SparePartImage src={item.imageUrl} alt={item.name} />
                         </td>
 
                         <td className="px-6 py-4">
@@ -756,7 +662,7 @@ export default function SparePartsPage() {
                             </button>
 
                             <button
-                              onClick={() => handleDelete(item.id)}
+                              onClick={() => handleDelete(item)}
                               className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#3A2927] bg-[#1A1514] text-[#D9796D] transition-all duration-200 hover:border-[#f97316] hover:bg-[#f97316]/10 hover:text-[#f97316]"
                               title="Delete"
                             >
@@ -881,7 +787,7 @@ export default function SparePartsPage() {
                     type="text"
                     value={form.slug}
                     onChange={(e) => handleInput("slug", e.target.value)}
-                    placeholder="/charger"
+                    placeholder="charger"
                     className={`${inputClass(errors.slug)} h-12 font-mono`}
                   />
 
@@ -999,14 +905,14 @@ export default function SparePartsPage() {
                       </span>
 
                       <span className="mt-1 text-xs text-[#697686]">
-                        JPG, PNG or WEBP • Max 2MB
+                        JPG, PNG, WEBP, GIF or AVIF • Max 5MB
                       </span>
                     </>
                   )}
 
                   <input
                     type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/avif"
                     onChange={handleImageUpload}
                     className="hidden"
                   />
@@ -1062,11 +968,16 @@ export default function SparePartsPage() {
 
                 <button
                   type="submit"
+                  disabled={saving}
                   className="flex items-center justify-center gap-2 rounded-xl bg-[#c8e51b] px-5 py-3 text-sm font-bold text-[#071018] transition-all duration-200 hover:bg-[#d8ef43] hover:shadow-[0_8px_25px_rgba(200,229,27,0.15)]"
                 >
                   <Check size={17} />
 
-                  {editingId !== null ? "Update Spare Part" : "Add Spare Part"}
+                  {saving
+                    ? "Saving..."
+                    : editingId !== null
+                      ? "Update Spare Part"
+                      : "Add Spare Part"}
                 </button>
               </div>
             </form>

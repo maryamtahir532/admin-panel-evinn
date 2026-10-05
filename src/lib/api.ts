@@ -1,8 +1,10 @@
+
 export class ApiError extends Error {
   status: number;
 
   constructor(message: string, status: number) {
     super(message);
+    this.name = "ApiError";
     this.status = status;
   }
 }
@@ -33,13 +35,15 @@ export async function request<T>(
     credentials: "include",
     headers:
       body !== undefined && !isForm
-        ? { "Content-Type": "application/json" }
+        ? {
+            "Content-Type": "application/json",
+          }
         : undefined,
     body:
       body === undefined
         ? undefined
         : isForm
-        ? (body as FormData)
+        ? body
         : JSON.stringify(body),
   });
 
@@ -62,3 +66,4 @@ export async function request<T>(
 
   return data as T;
 }
+

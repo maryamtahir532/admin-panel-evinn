@@ -1,7 +1,8 @@
+
 export type ObjectId = string;
 export type ISODate = string;
 
-export interface ApiError {
+export interface ApiErrorResponse {
   message: string;
 }
 
@@ -39,7 +40,10 @@ export interface Brand {
   updatedAt: ISODate;
 }
 
-export type BrandSummary = Pick<Brand, "_id" | "displayName" | "logoUrl">;
+export type BrandSummary = Pick<
+  Brand,
+  "_id" | "displayName" | "logoUrl"
+>;
 
 export type BikeType = "bike" | "scooter";
 
@@ -83,13 +87,30 @@ export interface Accessory {
   updatedAt: ISODate;
 }
 
+export interface SparePart {
+  _id: ObjectId;
+  name: string;
+  slug: string;
+  price: number;
+  priceText: string;
+  imageUrl: string;
+  imagePublicId: string;
+  description: string;
+  features: string[];
+  inStock: boolean;
+  createdAt: ISODate;
+  updatedAt: ISODate;
+}
+
 export interface LoginResponse {
   accessToken: string;
   admin: Admin;
 }
+
 export interface MeResponse {
   admin: Admin;
 }
+
 export interface MessageResponse {
   message: string;
 }
@@ -97,6 +118,7 @@ export interface MessageResponse {
 export interface BrandListResponse {
   brands: Brand[];
 }
+
 export interface BrandResponse {
   brand: Brand;
 }
@@ -105,6 +127,7 @@ export interface BikeListResponse {
   bikes: Bike[];
   pagination: Pagination;
 }
+
 export interface BikeResponse {
   bike: Bike;
 }
@@ -113,19 +136,35 @@ export interface AccessoryListResponse {
   accessories: Accessory[];
   pagination: Pagination;
 }
+
 export interface AccessoryResponse {
   accessory: Accessory;
+}
+
+export interface SparePartListResponse {
+  spareParts: SparePart[];
+  pagination: Pagination;
+}
+
+export interface SparePartResponse {
+  sparePart: SparePart;
 }
 
 export interface PageQuery {
   page?: number;
   limit?: number;
 }
+
 export interface BikeListQuery extends PageQuery {
   brand?: ObjectId;
   type?: BikeType;
 }
+
 export interface AccessoryListQuery extends PageQuery {
+  inStock?: boolean;
+}
+
+export interface SparePartListQuery extends PageQuery {
   inStock?: boolean;
 }
 
@@ -162,3 +201,13 @@ export interface AccessoryInput {
   features?: string[];
   inStock?: boolean;
 }
+
+export interface SparePartInput {
+  name?: string;
+  slug?: string;
+  price?: number;
+  description?: string;
+  features?: string[];
+  inStock?: boolean;
+}
+

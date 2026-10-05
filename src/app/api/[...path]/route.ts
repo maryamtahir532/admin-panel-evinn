@@ -1,7 +1,9 @@
+
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
-  process.env.BACKEND_API_URL || "https://evinn.evermontech.com/api";
+  process.env.BACKEND_API_URL ||
+  "https://evinn.evermontech.com/api";
 
 async function handler(
   request: NextRequest,
@@ -9,25 +11,32 @@ async function handler(
 ) {
   const { path } = await params;
 
-  const backendUrl = new URL(`${BACKEND_URL}/${path.join("/")}`);
+  const backendUrl = new URL(
+    `${BACKEND_URL}/${path.join("/")}`
+  );
 
-  // Query parameters forward karo
   request.nextUrl.searchParams.forEach((value, key) => {
     backendUrl.searchParams.append(key, value);
   });
 
   const headers = new Headers();
 
-  // Browser ki cookie backend ko forward karo
   const cookie = request.headers.get("cookie");
+
   if (cookie) {
     headers.set("cookie", cookie);
   }
 
-  // Content-Type forward karo
   const contentType = request.headers.get("content-type");
+
   if (contentType) {
     headers.set("content-type", contentType);
+  }
+
+  const authorization = request.headers.get("authorization");
+
+  if (authorization) {
+    headers.set("authorization", authorization);
   }
 
   const body =
@@ -46,12 +55,16 @@ async function handler(
 
   const responseHeaders = new Headers();
 
-  const responseContentType = response.headers.get("content-type");
+  const responseContentType =
+    response.headers.get("content-type");
+
   if (responseContentType) {
-    responseHeaders.set("content-type", responseContentType);
+    responseHeaders.set(
+      "content-type",
+      responseContentType
+    );
   }
 
-  // Backend ki httpOnly accessToken cookie browser ko forward karo
   const setCookies =
     typeof response.headers.getSetCookie === "function"
       ? response.headers.getSetCookie()
@@ -72,3 +85,4 @@ export const POST = handler;
 export const PATCH = handler;
 export const PUT = handler;
 export const DELETE = handler;
+
